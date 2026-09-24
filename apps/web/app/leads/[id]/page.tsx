@@ -20,22 +20,22 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   }
 
   return (
-    <div className="mx-auto max-w-lg">
+    <div className="mx-auto w-full min-w-0 max-w-lg">
       <Link href="/leads" className="link">
         Back to leads
       </Link>
-      <article className="card mt-4 bg-base-100 shadow-sm">
-        <div className="card-body gap-3">
-          <h1 className="card-title text-2xl">
+      <article className="card mt-4 w-full min-w-0 bg-base-100 shadow-sm">
+        <div className="card-body min-w-0 gap-3">
+          <h1 className="card-title text-2xl break-words">
             {lead.first_name} {lead.last_name}
           </h1>
-          <p>{lead.email}</p>
+          <p className="break-all">{lead.email}</p>
           <p>
             <StatusBadge status={lead.status} />
           </p>
           <p className="text-base-content/70">Submitted {new Date(lead.created_at).toLocaleString()}</p>
           <div className="card-actions mt-2 flex-col items-stretch sm:flex-row">
-            <a href={`/api/leads/${lead.id}/resume`} className="btn">
+            <a href={`/api/leads/${lead.id}/resume`} className="btn w-full sm:w-auto">
               Download resume
             </a>
             <ReachOutButton leadId={lead.id} status={lead.status} />

@@ -1,7 +1,11 @@
+import { cookies } from "next/headers";
 import { insertLead, saveResume } from "../../../lib/supabase";
 import { sendLeadEmails } from "../../../lib/mail";
 
 export async function POST(request: Request) {
+  if ((await cookies()).get("access_token")?.value) {
+    return Response.json({ detail: "Log out before submitting an application." }, { status: 403 });
+  }
   const form = await request.formData();
   const resume = form.get("resume");
   if (!(resume instanceof File)) {

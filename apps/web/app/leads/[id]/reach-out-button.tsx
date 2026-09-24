@@ -28,13 +28,13 @@ export function ReachOutButton({ leadId, status }: { leadId: string; status: str
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <button type="button" className="btn btn-primary" onClick={markReachedOut} disabled={pending}>
+    <div className="flex w-full min-w-0 flex-col gap-2">
+      <button type="button" className="btn btn-primary w-full sm:w-auto" onClick={markReachedOut} disabled={pending}>
         {pending ? <span className="loading loading-spinner" /> : null}
         {pending ? "Saving" : "Mark as reached out"}
       </button>
       {error ? (
-        <div role="alert" className="alert alert-error">
+        <div role="alert" className="alert alert-error break-words">
           {error}
         </div>
       ) : null}

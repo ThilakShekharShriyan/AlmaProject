@@ -28,8 +28,23 @@ export default async function LeadsPage() {
           New applications will show up here after a prospect submits the form.
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-box bg-base-100">
-          <table className="table">
+        <>
+        <ul className="mt-6 flex flex-col gap-3 md:hidden">
+          {leads.map((lead) => (
+            <li key={lead.id} className="rounded-box bg-base-100 p-4">
+              <Link href={`/leads/${lead.id}`} className="link text-lg">
+                {lead.first_name} {lead.last_name}
+              </Link>
+              <p className="mt-1 break-all">{lead.email}</p>
+              <p className="mt-2">
+                <StatusBadge status={lead.status} />
+              </p>
+              <p className="mt-2 text-base-content/70">Submitted {new Date(lead.created_at).toLocaleString()}</p>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 hidden rounded-box bg-base-100 md:block">
+          <table className="table w-full">
             <thead>
               <tr>
                 <th>Name</th>
@@ -41,21 +56,22 @@ export default async function LeadsPage() {
             <tbody>
               {leads.map((lead) => (
                 <tr key={lead.id} className="hover">
-                  <td>
+                  <td className="whitespace-normal">
                     <Link href={`/leads/${lead.id}`} className="link">
                       {lead.first_name} {lead.last_name}
                     </Link>
                   </td>
-                  <td>{lead.email}</td>
+                  <td className="break-all whitespace-normal">{lead.email}</td>
                   <td>
                     <StatusBadge status={lead.status} />
                   </td>
-                  <td>{new Date(lead.created_at).toLocaleString()}</td>
+                  <td className="whitespace-normal">{new Date(lead.created_at).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );
