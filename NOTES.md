@@ -10,3 +10,5 @@ Agent-generated, then reviewed against pytest before each push:
 Hand adjustment: `apps/identity/tests/test_login.py` after the first run failed. The agent opened `TestClient` without a context manager, so startup never created `users`. The fix is the `with TestClient(app)` block in that file.
 
 `*.egg-info` was committed once by the agent and removed in the identity commit.
+
+Hand adjustment: `apps/web/app/apply/page.tsx`. After a successful submit, `event.currentTarget` is null, so `reset()` threw. The handler now keeps the form element from before the request.

@@ -9,19 +9,20 @@ export default function ApplyPage() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const formElement = event.currentTarget;
     setPending(true);
     setError(null);
     setMessage(null);
-    const form = new FormData(event.currentTarget);
+    const form = new FormData(formElement);
     const response = await fetch("/api/apply", { method: "POST", body: form });
     const body = await response.json().catch(() => ({}));
     setPending(false);
     if (!response.ok) {
-      setError(body.detail ?? "Could not submit the application.");
+      setError(typeof body.detail === "string" ? body.detail : "Could not submit the application.");
       return;
     }
     setMessage("Application received. Check your email for a confirmation.");
-    event.currentTarget.reset();
+    formElement.reset();
   }
 
   return (
