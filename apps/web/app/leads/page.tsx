@@ -32,7 +32,7 @@ export default async function LeadsPage() {
         <ul className="mt-6 flex flex-col gap-3 md:hidden">
           {leads.map((lead) => (
             <li key={lead.id} className="rounded-box bg-base-100 p-4">
-              <Link href={`/leads/${lead.id}`} className="link text-lg">
+              <Link href={`/leads/${lead.id}`} prefetch={false} className="link text-lg">
                 {lead.first_name} {lead.last_name}
               </Link>
               <p className="mt-1 break-all">{lead.email}</p>
@@ -57,7 +57,7 @@ export default async function LeadsPage() {
               {leads.map((lead) => (
                 <tr key={lead.id} className="hover">
                   <td className="whitespace-normal">
-                    <Link href={`/leads/${lead.id}`} className="link">
+                    <Link href={`/leads/${lead.id}`} prefetch={false} className="link">
                       {lead.first_name} {lead.last_name}
                     </Link>
                   </td>
