@@ -6,6 +6,8 @@ export default function Home() {
       <h1>Lead intake</h1>
       <p>
         <Link href="/apply">Apply</Link>
+        {" · "}
+        <Link href="/login">Attorney login</Link>
       </p>
     </main>
   );
