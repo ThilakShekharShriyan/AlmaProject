@@ -1,18 +1,18 @@
 # Prompt excerpts
 
-Short excerpts from the Cursor session. The agent implemented each one.
+The agent implemented these. I kept the ones that show the decision, the review, and the bug.
 
-**Scope**
+**End to end, both customers**
 
-> Develop an application to support creating, getting and updating leads. A lead is a form PUBLICLY available for prospects… first name, last name, email, resume / CV… emails to both the prospect and an attorney… PENDING… REACHED_OUT… FastAPI APIs and a simple front-end in Next.js… persistent storage… how to run the project… design document… coding-agent usage.
+> A lead is a form PUBLICLY available for prospects… first name, last name, email, resume / CV. Once submitted, send emails to both the prospect and an attorney. An internal UI guarded by auth lists the leads. State starts PENDING and transitions to REACHED_OUT when an attorney marks it. Design the system, build the web app and APIs, persistent storage, and document how to run it.
 
-**After the first services were too heavy**
+**Cut scope instead of keeping a diagram**
 
 > lets get rid of all the unnecessary stuff
 
-The running app became one Next.js app on Supabase and Resend.
+The FastAPI services, local Postgres, Redis, and Mailpit came out. Supabase holds auth, rows, and resumes. Resend sends mail.
 
-**A bug I hit in the browser**
+**Caught on the success path**
 
 > Cannot read properties of null (reading 'reset')
 >
@@ -20,16 +20,20 @@ The running app became one Next.js app on Supabase and Resend.
 >
 > event.currentTarget.reset();
 
-**Header review**
+The lead had already saved. The crash was the form clear after `await`.
+
+**Attorney workflow is not public chrome**
 
 > the logout on top header should only be if we are signed in and admin also option shouldn't be, if you want to go to admin you should manually type in url
 
-**Deploy**
+> if you are logged in and you are trying to go outside it, you will need to log out, like going to apply, so u cant apply as admin
 
-> using next js and vercel we can deploy it
->
+**Ship with the tools in the loop**
+
 > I have authenticated vercel and there is mcp server as well can you try now with custom domain name
 
-**Agent usage, this writeup**
+> Can we enable CI CD for free github and create a loop… with vercel
 
-> Submit a Document your coding-agent usage… which tools you used, what you delegated vs. wrote yourself and why, and one place the agent produced wrong or subtly bad code… Representative prompt logs… Attribution in your commits or a NOTES file.
+**Say what would change on our own platform**
+
+> I currently used supabase for auth, storage and email… if we had our own infrastructure, AWS EKS and in house Oauth SSO, authentication it would be different. Explain how my current design is and how it works, and will scale, advantage and disadvantage of this method.

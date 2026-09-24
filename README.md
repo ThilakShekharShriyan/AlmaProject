@@ -90,4 +90,4 @@ Check the types with `npx tsc --noEmit` from `apps/web`.
 4. Open the lead, download the resume, and click **Reach out**. The status becomes `REACHED_OUT`.
 5. Click **Reach out** again. The app rejects it.
 
-Design notes are in [docs/DESIGN.md](docs/DESIGN.md). Agent usage is in [docs/AGENT.md](docs/AGENT.md).
+Design notes are in [docs/DESIGN.md](docs/DESIGN.md). Agent usage is in [docs/AGENT.md](docs/AGENT.md), with excerpts in [docs/PROMPTS.md](docs/PROMPTS.md) and attribution in [NOTES.md](NOTES.md).
