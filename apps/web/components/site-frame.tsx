@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { cookies } from "next/headers";
+import { AttorneyLogout } from "./attorney-logout";
 
-export async function SiteFrame({ children }: { children: React.ReactNode }) {
-  const signedIn = Boolean((await cookies()).get("access_token")?.value);
-
+export function SiteFrame({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen min-w-0 flex-col bg-base-200">
       <header className="navbar min-h-16 w-full min-w-0 flex-wrap bg-base-100 px-2 shadow-sm sm:px-4">
@@ -12,13 +10,7 @@ export async function SiteFrame({ children }: { children: React.ReactNode }) {
             Lead intake
           </Link>
         </div>
-        {signedIn ? (
-          <nav className="navbar-end min-w-0">
-            <Link href="/logout" className="btn btn-ghost">
-              Log out
-            </Link>
-          </nav>
-        ) : null}
+        <AttorneyLogout />
       </header>
       <main className="mx-auto w-full min-w-0 max-w-5xl flex-1 px-4 py-8 sm:px-6">{children}</main>
     </div>
