@@ -52,6 +52,16 @@ NOTES.md
 README.md
 ```
 
+## Why
+
+- Five processes keep file bytes, passwords, lead state, and SMTP out of one process. A mail failure cannot roll back a saved lead.
+- Postgres is one local server with three databases so the services do not share tables. Redis carries only `LeadSubmitted`.
+- The resume stays on disk. The documents database stores the path.
+- `EmailSender` is the mail port. Local SMTP is Mailpit, so the inbox is visible without an API key.
+- The browser talks only to Next.js. Service URLs stay on the server. The attorney JWT is an httpOnly cookie.
+- Leads checks the JWT itself with the shared secret, so listing leads does not call identity.
+- Status moves only from `PENDING` to `REACHED_OUT`. A repeat is 409.
+
 ## Out of this pass
 
 No Docker, Compose, Kubernetes, AWS, OAuth, or resume bytes in Postgres. Docker Compose is a later follow-up.
