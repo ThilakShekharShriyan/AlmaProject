@@ -1,0 +1,4 @@
+stateDiagram-v2
+  [*] --> PENDING: application saved
+  PENDING --> REACHED_OUT: attorney Reach out
+  REACHED_OUT --> REACHED_OUT: another update returns 409

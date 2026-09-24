@@ -1,0 +1,21 @@
+sequenceDiagram
+  actor Attorney
+  participant Web as Next.js
+  participant Auth as Supabase Auth
+  participant DB as Supabase Postgres
+
+  Attorney->>Web: POST /api/login
+  Web->>Auth: password grant
+  Auth-->>Web: access token
+  Web-->>Attorney: httpOnly cookie
+  Attorney->>Web: GET /leads
+  Web->>DB: select leads with the token
+  DB-->>Web: rows allowed by RLS
+  Attorney->>Web: Reach out
+  Web->>DB: set REACHED_OUT
+  alt still PENDING
+    DB-->>Web: updated row
+  else already REACHED_OUT
+    DB-->>Web: 23514
+    Web-->>Attorney: 409
+  end

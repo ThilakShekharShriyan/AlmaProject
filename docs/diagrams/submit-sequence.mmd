@@ -1,0 +1,17 @@
+sequenceDiagram
+  actor Prospect
+  participant Web as Next.js
+  participant Storage as Supabase Storage
+  participant DB as Supabase Postgres
+  participant Mail as Resend
+
+  Prospect->>Web: POST /api/apply
+  alt attorney cookie present
+    Web-->>Prospect: 403
+  else public visitor
+    Web->>Storage: upload resume
+    Web->>DB: insert document and PENDING lead
+    Web->>Mail: prospect email and attorney email
+    Note over Web,Mail: a mail failure is logged, the lead stays
+    Web-->>Prospect: saved lead
+  end

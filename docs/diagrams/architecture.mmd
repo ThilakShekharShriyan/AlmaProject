@@ -1,0 +1,13 @@
+flowchart LR
+  browser[Browser]
+  vercel[Next.js on Vercel]
+  auth[Supabase Auth]
+  db[Supabase Postgres]
+  storage[Supabase Storage resumes]
+  resend[Resend]
+
+  browser --> vercel
+  vercel --> auth
+  vercel --> db
+  vercel --> storage
+  vercel --> resend

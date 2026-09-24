@@ -6,12 +6,50 @@ A prospect submits a name, email, and resume. An attorney later signs in, reads 
 
 The browser talks only to one Next.js app, `apps/web`. That app calls Supabase for auth, rows, and files, and Resend for the two emails. Vercel hosts the app. GitHub Actions typechecks and builds on every push and pull request. A push to `main` deploys.
 
+Source files for the diagrams are in [docs/diagrams](diagrams).
+
+```mermaid
+flowchart LR
+  browser[Browser]
+  vercel[Next.js on Vercel]
+  auth[Supabase Auth]
+  db[Supabase Postgres]
+  storage[Supabase Storage resumes]
+  resend[Resend]
+
+  browser --> vercel
+  vercel --> auth
+  vercel --> db
+  vercel --> storage
+  vercel --> resend
+```
+
 ## How a submission works
 
 1. `POST /api/apply` refuses the request when the attorney session cookie is present, so a signed-in attorney cannot file an application.
 2. The resume must be a PDF, DOC, or DOCX under 10 MB. The app uploads the bytes to the private Storage bucket `resumes` and inserts a `documents` row (id, filename, content type, storage path).
 3. It inserts a `leads` row as `PENDING`, with the prospect fields and the document id. The app generates the ids. Inserts use `return=minimal` because the anonymous role cannot read the row back.
 4. The same request sends two Resend emails: one to the prospect, one to `ATTORNEY_NOTIFICATION_EMAIL`. If either send fails, the lead stays saved and the error is logged. Mail does not roll back the row.
+
+```mermaid
+sequenceDiagram
+  actor Prospect
+  participant Web as Next.js
+  participant Storage as Supabase Storage
+  participant DB as Supabase Postgres
+  participant Mail as Resend
+
+  Prospect->>Web: POST /api/apply
+  alt attorney cookie present
+    Web-->>Prospect: 403
+  else public visitor
+    Web->>Storage: upload resume
+    Web->>DB: insert document and PENDING lead
+    Web->>Mail: prospect email and attorney email
+    Note over Web,Mail: a mail failure is logged, the lead stays
+    Web-->>Prospect: saved lead
+  end
+```
 
 ## How attorney access works
 
@@ -23,6 +61,45 @@ A database check allows only `PENDING` → `REACHED_OUT`. Any other update, incl
 
 Log out clears the cookie. The header shows that action only on the lead pages. The public pages ask a signed-in attorney to log out or go back.
 
+```mermaid
+stateDiagram-v2
+  [*] --> Visitor
+  Visitor --> Applying: open /apply
+  Applying --> Visitor: application saved
+  Visitor --> SignedIn: sign in at /admin
+  SignedIn --> LeadList: open /leads
+  LeadList --> LeadDetail: open one lead
+  LeadDetail --> LeadDetail: Reach out
+  SignedIn --> PublicBlocked: open / or /apply
+  PublicBlocked --> Visitor: log out
+  PublicBlocked --> LeadList: cancel
+  LeadList --> Visitor: log out
+```
+
+```mermaid
+sequenceDiagram
+  actor Attorney
+  participant Web as Next.js
+  participant Auth as Supabase Auth
+  participant DB as Supabase Postgres
+
+  Attorney->>Web: POST /api/login
+  Web->>Auth: password grant
+  Auth-->>Web: access token
+  Web-->>Attorney: httpOnly cookie
+  Attorney->>Web: GET /leads
+  Web->>DB: select leads with the token
+  DB-->>Web: rows allowed by RLS
+  Attorney->>Web: Reach out
+  Web->>DB: set REACHED_OUT
+  alt still PENDING
+    DB-->>Web: updated row
+  else already REACHED_OUT
+    DB-->>Web: 23514
+    Web-->>Attorney: 409
+  end
+```
+
 ## Why this shape
 
 Supabase already separates the three things this product stores: who the attorney is, the lead rows, and the resume bytes. One Next.js process is enough to orchestrate them. Splitting auth, documents, and leads into separate services would add network hops and deploy units without a second team to own them.
@@ -30,6 +107,13 @@ Supabase already separates the three things this product stores: who the attorne
 Resend is the mail path, not Supabase. Supabase Auth confirms the attorney account. It does not send the prospect confirmation or the attorney notification. Those are product emails, so they go through a verified sending domain on Resend.
 
 The status rule lives in the database, not only in the button. A client that calls the API twice still cannot move a lead twice.
+
+```mermaid
+stateDiagram-v2
+  [*] --> PENDING: application saved
+  PENDING --> REACHED_OUT: attorney Reach out
+  REACHED_OUT --> REACHED_OUT: another update returns 409
+```
 
 Email is synchronous and best-effort. The assignment’s important record is the lead. A mail outage must not lose it.
 
@@ -70,6 +154,25 @@ For the traffic this product actually has, those limits are acceptable. The desi
 ## If this ran on our own infrastructure
 
 With AWS EKS and in-house OAuth, the product behavior would stay the same and the ownership would change.
+
+```mermaid
+flowchart LR
+  user[Browser]
+  ingress[Ingress]
+  app[Next.js on EKS]
+  idp[Company OAuth]
+  rds[RDS]
+  s3[S3]
+  queue[SQS]
+  worker[Mail worker]
+  ses[SES]
+
+  user --> ingress --> app
+  app --> idp
+  app --> rds
+  app --> s3
+  app --> queue --> worker --> ses
+```
 
 The Next.js app would run as a deployment on the cluster, behind the company ingress and load balancer. We would own the image, the replicas, the rollout, and the secrets. GitHub would build the image and the cluster would roll it out, instead of Vercel deploying the Git push.
 

@@ -1,0 +1,16 @@
+flowchart LR
+  user[Browser]
+  ingress[Ingress]
+  app[Next.js on EKS]
+  idp[Company OAuth]
+  rds[RDS]
+  s3[S3]
+  queue[SQS]
+  worker[Mail worker]
+  ses[SES]
+
+  user --> ingress --> app
+  app --> idp
+  app --> rds
+  app --> s3
+  app --> queue --> worker --> ses
