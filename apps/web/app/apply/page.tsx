@@ -21,36 +21,60 @@ export default function ApplyPage() {
       setError(typeof body.detail === "string" ? body.detail : "Could not submit the application.");
       return;
     }
-    setMessage("Application received. Check your email for a confirmation.");
+    const email = String(form.get("email") ?? "");
+    setMessage(`Application received. A confirmation was sent to ${email}.`);
     formElement.reset();
   }
 
   return (
-    <main>
-      <h1>Apply</h1>
-      <form onSubmit={onSubmit}>
-        <label>
-          First name
-          <input name="first_name" required />
-        </label>
-        <label>
-          Last name
-          <input name="last_name" required />
-        </label>
-        <label>
-          Email
-          <input name="email" type="email" required />
-        </label>
-        <label>
-          Resume
-          <input name="resume" type="file" accept=".pdf,.doc,.docx" required />
-        </label>
-        <button type="submit" disabled={pending}>
-          {pending ? "Submitting..." : "Submit"}
-        </button>
+    <div className="mx-auto max-w-lg">
+      <h1 className="text-3xl font-semibold">Apply</h1>
+      <p className="mt-2 text-base-content/70">
+        All four fields are required. The resume must be a PDF, DOC, or DOCX under 10 MB.
+      </p>
+      <form onSubmit={onSubmit} className="card mt-6 bg-base-100 shadow-sm">
+        <div className="card-body gap-4">
+          <fieldset className="fieldset">
+            <label className="label" htmlFor="first_name">
+              First name
+            </label>
+            <input id="first_name" name="first_name" className="input w-full" autoComplete="given-name" required />
+          </fieldset>
+          <fieldset className="fieldset">
+            <label className="label" htmlFor="last_name">
+              Last name
+            </label>
+            <input id="last_name" name="last_name" className="input w-full" autoComplete="family-name" required />
+          </fieldset>
+          <fieldset className="fieldset">
+            <label className="label" htmlFor="email">
+              Email
+            </label>
+            <input id="email" name="email" type="email" className="input w-full" autoComplete="email" required />
+            <p className="label">We send the confirmation to this address.</p>
+          </fieldset>
+          <fieldset className="fieldset">
+            <label className="label" htmlFor="resume">
+              Resume
+            </label>
+            <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx,application/pdf" className="file-input w-full" required />
+          </fieldset>
+          {message ? (
+            <div role="alert" className="alert alert-success">
+              {message}
+            </div>
+          ) : null}
+          {error ? (
+            <div role="alert" className="alert alert-error">
+              {error}
+            </div>
+          ) : null}
+          <button type="submit" className="btn btn-primary" disabled={pending}>
+            {pending ? <span className="loading loading-spinner" /> : null}
+            {pending ? "Submitting" : "Submit application"}
+          </button>
+        </div>
       </form>
-      {message ? <p>{message}</p> : null}
-      {error ? <p>{error}</p> : null}
-    </main>
+    </div>
   );
 }
