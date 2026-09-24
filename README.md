@@ -1,30 +1,18 @@
 # Lead intake
 
-Public prospect form, attorney review, and email notification. Five processes on the host. No Docker in this pass.
+Public prospect form, attorney review, and email notification. Postgres, Redis, and Mailpit run in Compose. The API and web processes stay on the host.
 
 ## What you need
 
+- Docker
 - Python 3.12
 - Node.js 20+
-- Local Postgres, Redis, and Mailpit
-
-On macOS:
 
 ```bash
-brew install python@3.12 postgresql@16 redis mailpit
-brew services start postgresql@16
-brew services start redis
-brew services start mailpit
+docker compose up -d
 ```
 
-Create the three databases once. `psql` is under the Postgres keg if it is not on your PATH.
-
-```bash
-PSQL=/opt/homebrew/opt/postgresql@16/bin/psql
-$PSQL -d postgres -c "CREATE DATABASE identity_db"
-$PSQL -d postgres -c "CREATE DATABASE documents_db"
-$PSQL -d postgres -c "CREATE DATABASE leads_db"
-```
+Compose creates `identity_db`, `documents_db`, and `leads_db`, and exposes Redis on 6379 and Mailpit on 1025 and 8025.
 
 ## Configure
 
@@ -46,6 +34,8 @@ Seeded attorney, from `.env.example` until you change `.env`:
 - password `change-me`
 
 Mailpit inbox: http://localhost:8025
+
+Real mail uses Resend when `RESEND_API_KEY` is set. Replace `re_xxxxxxxxx` in `.env` with your Resend API key, set `SMTP_FROM` to an address on a domain you verified in Resend, then restart the notifications process. `onboarding@resend.dev` only delivers to the email on your Resend account. Leave `RESEND_API_KEY` empty to keep using Mailpit.
 
 ## Run
 

@@ -45,6 +45,7 @@ apps/identity
 apps/documents
 apps/leads
 apps/notifications
+docker-compose.yml
 docs/DESIGN.md
 docs/AGENT.md
 NOTES.md
@@ -62,6 +63,6 @@ README.md
 - Leads checks the JWT itself with the shared secret, so listing leads does not call identity.
 - Status moves only from `PENDING` to `REACHED_OUT`. A repeat is 409.
 
-## Out of this pass
+## Boundaries
 
-No Docker, Compose, Kubernetes, AWS, OAuth, or resume bytes in Postgres. Docker Compose is a later follow-up.
+Compose runs Postgres, Redis, and Mailpit. The API and web processes stay on the host. No Kubernetes, AWS, OAuth, or resume bytes in Postgres.
