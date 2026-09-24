@@ -9,6 +9,10 @@ class Settings(BaseSettings):
     smtp_host: str = "127.0.0.1"
     smtp_port: int = 1025
     smtp_from: str = "leads@localhost"
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = False
+    resend_api_key: str = ""
     attorney_notification_email: str = "attorney@example.com"
 
 

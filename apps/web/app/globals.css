@@ -1,42 +1,40 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@import "tailwindcss";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "cream";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+  --color-base-100: oklch(97% 0.02 95);
+  --color-base-200: oklch(94% 0.03 98);
+  --color-base-300: oklch(89% 0.04 100);
+  --color-base-content: oklch(30% 0.04 150);
+  --color-primary: oklch(42% 0.11 150);
+  --color-primary-content: oklch(97% 0.02 95);
+  --color-secondary: oklch(72% 0.08 145);
+  --color-secondary-content: oklch(28% 0.05 150);
+  --color-accent: oklch(55% 0.12 155);
+  --color-accent-content: oklch(97% 0.02 95);
+  --color-neutral: oklch(32% 0.04 150);
+  --color-neutral-content: oklch(96% 0.02 95);
+  --color-info: oklch(62% 0.08 200);
+  --color-info-content: oklch(98% 0.01 200);
+  --color-success: oklch(48% 0.12 150);
+  --color-success-content: oklch(97% 0.02 95);
+  --color-warning: oklch(78% 0.12 85);
+  --color-warning-content: oklch(28% 0.05 80);
+  --color-error: oklch(55% 0.18 25);
+  --color-error-content: oklch(98% 0.01 25);
 
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
+  --radius-selector: 1rem;
+  --radius-field: 0.5rem;
+  --radius-box: 1rem;
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
 }
