@@ -2,31 +2,17 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { StatusBadge } from "../../components/site-frame";
-
-type Lead = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  status: string;
-  created_at: string;
-};
-
-const leadsUrl = process.env.LEADS_URL ?? "http://127.0.0.1:8003";
+import { listLeads } from "../../lib/supabase";
 
 export default async function LeadsPage() {
   const token = (await cookies()).get("access_token")?.value;
   if (!token) {
     redirect("/login");
   }
-  const response = await fetch(`${leadsUrl}/leads`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (response.status === 401) {
+  const leads = await listLeads(token);
+  if (leads === 401) {
     redirect("/login");
   }
-  const leads = (await response.json()) as Lead[];
   const pendingCount = leads.filter((lead) => lead.status === "PENDING").length;
 
   return (
@@ -42,8 +28,23 @@ export default async function LeadsPage() {
           New applications will show up here after a prospect submits the form.
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-box bg-base-100">
-          <table className="table">
+        <>
+        <ul className="mt-6 flex flex-col gap-3 md:hidden">
+          {leads.map((lead) => (
+            <li key={lead.id} className="rounded-box bg-base-100 p-4">
+              <Link href={`/leads/${lead.id}`} className="link text-lg">
+                {lead.first_name} {lead.last_name}
+              </Link>
+              <p className="mt-1 break-all">{lead.email}</p>
+              <p className="mt-2">
+                <StatusBadge status={lead.status} />
+              </p>
+              <p className="mt-2 text-base-content/70">Submitted {new Date(lead.created_at).toLocaleString()}</p>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-6 hidden rounded-box bg-base-100 md:block">
+          <table className="table w-full">
             <thead>
               <tr>
                 <th>Name</th>
@@ -55,21 +56,22 @@ export default async function LeadsPage() {
             <tbody>
               {leads.map((lead) => (
                 <tr key={lead.id} className="hover">
-                  <td>
+                  <td className="whitespace-normal">
                     <Link href={`/leads/${lead.id}`} className="link">
                       {lead.first_name} {lead.last_name}
                     </Link>
                   </td>
-                  <td>{lead.email}</td>
+                  <td className="break-all whitespace-normal">{lead.email}</td>
                   <td>
                     <StatusBadge status={lead.status} />
                   </td>
-                  <td>{new Date(lead.created_at).toLocaleString()}</td>
+                  <td className="whitespace-normal">{new Date(lead.created_at).toLocaleString()}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

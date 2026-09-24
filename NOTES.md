@@ -13,6 +13,4 @@ Hand adjustment: `apps/identity/tests/test_login.py` after the first run failed.
 
 Hand adjustment: `apps/web/app/apply/page.tsx`. After a successful submit, `event.currentTarget` is null, so `reset()` threw. The handler now keeps the form element from before the request.
 
-Agent-generated: `docker-compose.yml` and `docker/postgres/init.sql` for local Postgres, Redis, and Mailpit.
-
-Agent-generated: Supabase Auth, Storage, and the leads tables replaced the local Postgres login and file store. Resend sends the prospect and attorney mail when `RESEND_API_KEY` is set. The web UI uses daisyUI with the cream theme.
+The FastAPI services and Redis queue were removed. The running app is `apps/web` only: Supabase for auth, leads, and resumes, Resend for mail.

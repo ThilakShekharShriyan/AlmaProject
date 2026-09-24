@@ -1,35 +1,27 @@
-const documentsUrl = process.env.DOCUMENTS_URL ?? "http://127.0.0.1:8002";
-const leadsUrl = process.env.LEADS_URL ?? "http://127.0.0.1:8003";
+import { cookies } from "next/headers";
+import { insertLead, saveResume } from "../../../lib/supabase";
+import { sendLeadEmails } from "../../../lib/mail";
 
 export async function POST(request: Request) {
+  if ((await cookies()).get("access_token")?.value) {
+    return Response.json({ detail: "Log out before submitting an application." }, { status: 403 });
+  }
   const form = await request.formData();
   const resume = form.get("resume");
   if (!(resume instanceof File)) {
     return Response.json({ detail: "resume is required" }, { status: 422 });
   }
-
-  const upload = new FormData();
-  upload.set("file", resume, resume.name);
-  const documentResponse = await fetch(`${documentsUrl}/documents`, {
-    method: "POST",
-    body: upload,
-  });
-  if (!documentResponse.ok) {
-    const detail = await documentResponse.json().catch(() => ({ detail: "upload failed" }));
-    return Response.json(detail, { status: documentResponse.status });
+  const saved = await saveResume(resume);
+  if (!saved.ok) {
+    return Response.json({ detail: saved.detail }, { status: saved.status });
   }
-  const document = await documentResponse.json();
-
-  const leadResponse = await fetch(`${leadsUrl}/leads`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      first_name: form.get("first_name"),
-      last_name: form.get("last_name"),
-      email: form.get("email"),
-      document_id: document.document_id,
-    }),
-  });
-  const lead = await leadResponse.json().catch(() => ({ detail: "lead create failed" }));
-  return Response.json(lead, { status: leadResponse.status });
+  const firstName = String(form.get("first_name") ?? "");
+  const lastName = String(form.get("last_name") ?? "");
+  const email = String(form.get("email") ?? "");
+  const lead = await insertLead({ firstName, lastName, email, documentId: saved.documentId });
+  if (!lead) {
+    return Response.json({ detail: "lead save failed" }, { status: 502 });
+  }
+  await sendLeadEmails(lead);
+  return Response.json(lead);
 }

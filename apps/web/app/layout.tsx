@@ -3,7 +3,7 @@ import { SiteFrame } from "../components/site-frame";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Alma lead intake",
+  title: "Lead intake",
   description: "Submit a resume or review prospect leads.",
 };
 

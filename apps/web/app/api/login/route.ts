@@ -1,23 +1,18 @@
 import { NextResponse } from "next/server";
-
-const identityUrl = process.env.IDENTITY_URL ?? "http://127.0.0.1:8001";
+import { signIn } from "../../../lib/supabase";
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  const response = await fetch(`${identityUrl}/auth/login`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const payload = await response.json().catch(() => ({ detail: "login failed" }));
-  if (!response.ok) {
-    return NextResponse.json(payload, { status: response.status });
+  const body = (await request.json()) as { email?: string; password?: string };
+  const token = await signIn(body.email ?? "", body.password ?? "");
+  if (!token) {
+    return NextResponse.json({ detail: "invalid credentials" }, { status: 401 });
   }
   const next = NextResponse.json({ ok: true });
-  next.cookies.set("access_token", payload.access_token, {
+  next.cookies.set("access_token", token, {
     httpOnly: true,
     sameSite: "lax",
     path: "/",
+    secure: process.env.NODE_ENV === "production",
   });
   return next;
 }

@@ -1,53 +1,27 @@
 # Lead intake
 
-Public prospect form, attorney review, and email notification. Postgres, Redis, and Mailpit run in Compose. The API and web processes stay on the host.
+Public prospect form and attorney review. Next.js on the host. Supabase holds auth, leads, and resumes. Resend sends the emails.
 
 ## What you need
 
-- Docker
-- Python 3.12
 - Node.js 20+
-
-```bash
-docker compose up -d
-```
-
-Compose creates `identity_db`, `documents_db`, and `leads_db`, and exposes Redis on 6379 and Mailpit on 1025 and 8025.
+- A Supabase project and a Resend API key
 
 ## Configure
 
 ```bash
 cp .env.example .env
-python3.12 -m venv .venv
-.venv/bin/pip install -U pip
-.venv/bin/pip install \
-  'fastapi>=0.115' 'uvicorn>=0.32' 'sqlalchemy>=2.0' 'psycopg[binary]>=3.2' \
-  'pydantic-settings>=2.6' 'pydantic[email]>=2.6' 'bcrypt>=4' 'pyjwt>=2.9' \
-  'redis>=5' 'python-multipart' 'alembic>=1.13' 'pytest>=8' 'httpx>=0.27'
 ```
 
-Each service uses the package name `app`, so do not install them into one environment. Run a service with `--app-dir`, and run its tests from that service directory.
+Fill in `.env`:
 
-Seeded attorney, from `.env.example` until you change `.env`:
+- `SUPABASE_URL` and `SUPABASE_ANON_KEY`
+- `RESEND_API_KEY`, and `EMAIL_FROM` as an address on a domain verified in Resend
+- `ATTORNEY_NOTIFICATION_EMAIL` for the attorney copy
 
-- email `attorney@example.com`
-- password `change-me`
-
-Mailpit inbox: http://localhost:8025
-
-Real mail uses Resend when `RESEND_API_KEY` is set. Replace `re_xxxxxxxxx` in `.env` with your Resend API key, set `SMTP_FROM` to an address on a domain you verified in Resend, then restart the notifications process. `onboarding@resend.dev` only delivers to the email on your Resend account. Leave `RESEND_API_KEY` empty to keep using Mailpit.
+Create the attorney in Supabase Authentication and confirm the email. The login form sends that email and password to Supabase.
 
 ## Run
-
-From the repo root, in separate terminals:
-
-```bash
-set -a && source .env && set +a
-.venv/bin/uvicorn app.main:app --app-dir apps/identity --port 8001
-.venv/bin/uvicorn app.main:app --app-dir apps/documents --port 8002
-.venv/bin/uvicorn app.main:app --app-dir apps/leads --port 8003
-.venv/bin/uvicorn app.main:app --app-dir apps/notifications --port 8004
-```
 
 ```bash
 cd apps/web
@@ -57,18 +31,11 @@ npm run dev
 
 Open http://localhost:3000/apply
 
-## Tests
-
-```bash
-(cd apps/identity && ../../.venv/bin/pytest -q)
-(cd apps/documents && ../../.venv/bin/pytest -q)
-(cd apps/leads && ../../.venv/bin/pytest -q)
-(cd apps/notifications && ../../.venv/bin/pytest -q)
-```
+The same app is deployed at https://leads.thilakshekharshriyan.com
 
 ## Demo path
 
 1. Submit the public form with a PDF resume.
-2. Open Mailpit and confirm mail to the prospect and the attorney.
-3. Sign in at `/login`.
+2. Confirm mail to the prospect and the attorney.
+3. Sign in at `/login` with the Supabase attorney user.
 4. Open the lead, download the resume, and click Reach out. Status becomes `REACHED_OUT`.
