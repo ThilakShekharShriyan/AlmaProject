@@ -1,39 +1,27 @@
 # Prompt excerpts
 
-The agent implemented these. I kept the ones that show the decision, the review, and the bug.
+Instructions from the session. The agent implemented them. I kept the ones that show the architecture call, the auth boundary, and the bug.
 
-**End to end, both customers**
+**Schema through the screen**
 
-> A lead is a form PUBLICLY available for prospects… first name, last name, email, resume / CV. Once submitted, send emails to both the prospect and an attorney. An internal UI guarded by auth lists the leads. State starts PENDING and transitions to REACHED_OUT when an attorney marks it. Design the system, build the web app and APIs, persistent storage, and document how to run it.
+> Build the lead intake end to end. Public `POST` accepts `first_name`, `last_name`, `email`, and a resume. Persist the row and the file, then send one email to the prospect and one to the attorney. The attorney UI is authenticated and lists every field the prospect submitted. Status is `PENDING` on insert and may move only to `REACHED_OUT`. Document the design and how to run it.
 
-**Cut scope instead of keeping a diagram**
+**Collapse the process boundary**
 
-> lets get rid of all the unnecessary stuff
+> Remove the FastAPI services, local Postgres, Redis, and Mailpit. Supabase is the system of record for Auth, the lead and document rows, and the private `resumes` bucket. Resend sends both messages. Keep the status transition in Postgres, not in the client.
 
-The FastAPI services, local Postgres, Redis, and Mailpit came out. Supabase holds auth, rows, and resumes. Resend sends mail.
+**Failure after a successful write**
 
-**Caught on the success path**
+> `POST /api/apply` returns 200 and the lead is stored, then the client throws `Cannot read properties of null (reading 'reset')` at `event.currentTarget.reset()` in `onSubmit`. `currentTarget` is null after the `await`. Capture the form element before the request and reset that reference.
 
-> Cannot read properties of null (reading 'reset')
->
-> app/apply/page.tsx (24:25) @ onSubmit
->
-> event.currentTarget.reset();
+**Session boundary**
 
-The lead had already saved. The crash was the form clear after `await`.
+> Do not render Admin or Log out in the public header. `/admin` is a typed URL. Show Log out only on `/leads` when the `access_token` cookie is present. If that cookie is set, `/` and `/apply` must not accept another application: offer log out, or cancel back to the lead list. `POST /api/apply` returns 403 in that case.
 
-**Attorney workflow is not public chrome**
+**Production loop**
 
-> the logout on top header should only be if we are signed in and admin also option shouldn't be, if you want to go to admin you should manually type in url
+> The Vercel MCP server is authenticated. Attach the custom domain, set the production env, and connect the GitHub repo so `main` deploys. Add a free GitHub Actions workflow that runs `npm ci`, `tsc --noEmit`, and `next build` in `apps/web` on every push and pull request.
 
-> if you are logged in and you are trying to go outside it, you will need to log out, like going to apply, so u cant apply as admin
+**Managed services versus our own platform**
 
-**Ship with the tools in the loop**
-
-> I have authenticated vercel and there is mcp server as well can you try now with custom domain name
-
-> Can we enable CI CD for free github and create a loop… with vercel
-
-**Say what would change on our own platform**
-
-> I currently used supabase for auth, storage and email… if we had our own infrastructure, AWS EKS and in house Oauth SSO, authentication it would be different. Explain how my current design is and how it works, and will scale, advantage and disadvantage of this method.
+> Document the current design: Supabase Auth, Postgres, and Storage, with Resend for product email. Explain the request path, the RLS boundary, and where it scales. Then contrast AWS EKS with in-house OIDC: the app on the cluster, RDS, S3, and a queue in front of SES. Same product rules, different ownership.
