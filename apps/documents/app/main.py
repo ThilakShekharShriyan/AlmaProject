@@ -1,18 +1,15 @@
 import uuid
-from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 from fastapi.security import HTTPAuthorizationCredentials
 from pydantic import BaseModel
-from sqlalchemy import select, text
 
-from app.config import settings
-from app.db import Base, SessionLocal, engine
-from app.models import Document
 from app.schemas import DocumentCreated
-from app.security import bearer, require_attorney
+from app.security import bearer, require_token
+from app.store import documents_ok, fetch_document, save_document
+from app.config import settings
 
 ALLOWED = {
     ".pdf": "application/pdf",
@@ -27,19 +24,10 @@ class HealthResponse(BaseModel):
 
 
 def database_ok() -> bool:
-    with engine.connect() as connection:
-        connection.execute(text("SELECT 1"))
-    return True
+    return documents_ok()
 
 
-@asynccontextmanager
-async def lifespan(_app: FastAPI):
-    Path(settings.upload_dir).mkdir(parents=True, exist_ok=True)
-    Base.metadata.create_all(bind=engine)
-    yield
-
-
-app = FastAPI(title="documents", lifespan=lifespan)
+app = FastAPI(title="documents")
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -62,29 +50,16 @@ async def upload_document(file: UploadFile = File(...)) -> DocumentCreated:
     if not payload:
         raise HTTPException(status_code=422, detail="resume is empty")
     document_id = str(uuid.uuid4())
-    destination = Path(settings.upload_dir) / f"{document_id}{suffix}"
-    destination.write_bytes(payload)
-    with SessionLocal() as session:
-        session.add(
-            Document(
-                id=document_id,
-                filename=file.filename or destination.name,
-                content_type=ALLOWED[suffix],
-                path=str(destination),
-            )
-        )
-        session.commit()
-    return DocumentCreated(document_id=document_id, filename=file.filename or destination.name)
+    filename = file.filename or f"{document_id}{suffix}"
+    save_document(document_id, filename, ALLOWED[suffix], payload, suffix)
+    return DocumentCreated(document_id=document_id, filename=filename)
 
 
 @app.get("/documents/{document_id}")
 def download_document(
     document_id: str,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer),
-) -> FileResponse:
-    require_attorney(credentials)
-    with SessionLocal() as session:
-        document = session.scalar(select(Document).where(Document.id == document_id))
-    if document is None or not Path(document.path).is_file():
-        raise HTTPException(status_code=404, detail="document not found")
-    return FileResponse(document.path, filename=document.filename, media_type=document.content_type)
+) -> Response:
+    token = require_token(credentials)
+    content, filename, content_type = fetch_document(document_id, token)
+    return Response(content, media_type=content_type, headers={"content-disposition": f'attachment; filename="{filename}"'})

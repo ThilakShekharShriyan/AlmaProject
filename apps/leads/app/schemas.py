@@ -1,8 +1,12 @@
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, EmailStr, Field
 
-from app.models import LeadStatus
+
+class LeadStatus(str, Enum):
+    PENDING = "PENDING"
+    REACHED_OUT = "REACHED_OUT"
 
 
 class LeadCreate(BaseModel):
