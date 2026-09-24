@@ -2,19 +2,8 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { StatusBadge } from "../../../components/site-frame";
+import { getLead } from "../../../lib/supabase";
 import { ReachOutButton } from "./reach-out-button";
-
-type Lead = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  document_id: string;
-  status: string;
-  created_at: string;
-};
-
-const leadsUrl = process.env.LEADS_URL ?? "http://127.0.0.1:8003";
 
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,17 +11,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   if (!token) {
     redirect("/login");
   }
-  const response = await fetch(`${leadsUrl}/leads/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (response.status === 401) {
+  const lead = await getLead(id, token);
+  if (lead === 401) {
     redirect("/login");
   }
-  if (response.status === 404) {
+  if (lead === 404) {
     notFound();
   }
-  const lead = (await response.json()) as Lead;
 
   return (
     <div className="mx-auto max-w-lg">

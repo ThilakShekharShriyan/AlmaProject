@@ -2,31 +2,17 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { StatusBadge } from "../../components/site-frame";
-
-type Lead = {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  status: string;
-  created_at: string;
-};
-
-const leadsUrl = process.env.LEADS_URL ?? "http://127.0.0.1:8003";
+import { listLeads } from "../../lib/supabase";
 
 export default async function LeadsPage() {
   const token = (await cookies()).get("access_token")?.value;
   if (!token) {
     redirect("/login");
   }
-  const response = await fetch(`${leadsUrl}/leads`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (response.status === 401) {
+  const leads = await listLeads(token);
+  if (leads === 401) {
     redirect("/login");
   }
-  const leads = (await response.json()) as Lead[];
   const pendingCount = leads.filter((lead) => lead.status === "PENDING").length;
 
   return (

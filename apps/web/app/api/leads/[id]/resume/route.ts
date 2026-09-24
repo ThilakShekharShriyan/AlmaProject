@@ -1,7 +1,5 @@
 import { cookies } from "next/headers";
-
-const leadsUrl = process.env.LEADS_URL ?? "http://127.0.0.1:8003";
-const documentsUrl = process.env.DOCUMENTS_URL ?? "http://127.0.0.1:8002";
+import { downloadResume, getLead } from "../../../../../lib/supabase";
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
@@ -9,24 +7,24 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
   if (!token) {
     return Response.json({ detail: "not authenticated" }, { status: 401 });
   }
-  const leadResponse = await fetch(`${leadsUrl}/leads/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  if (!leadResponse.ok) {
-    return Response.json(await leadResponse.json(), { status: leadResponse.status });
+  const lead = await getLead(id, token);
+  if (lead === 401) {
+    return Response.json({ detail: "not authenticated" }, { status: 401 });
   }
-  const lead = await leadResponse.json();
-  const fileResponse = await fetch(`${documentsUrl}/documents/${lead.document_id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!fileResponse.ok) {
-    return Response.json({ detail: "resume unavailable" }, { status: fileResponse.status });
+  if (lead === 404) {
+    return Response.json({ detail: "lead not found" }, { status: 404 });
   }
-  return new Response(fileResponse.body, {
+  const file = await downloadResume(lead.document_id, token);
+  if (file === 401) {
+    return Response.json({ detail: "not authenticated" }, { status: 401 });
+  }
+  if (file === 404) {
+    return Response.json({ detail: "resume unavailable" }, { status: 404 });
+  }
+  return new Response(file.bytes, {
     headers: {
-      "content-type": fileResponse.headers.get("content-type") ?? "application/octet-stream",
-      "content-disposition": fileResponse.headers.get("content-disposition") ?? "attachment",
+      "content-type": file.contentType,
+      "content-disposition": `attachment; filename="${file.filename}"`,
     },
   });
 }
